@@ -2,7 +2,7 @@
 
 ## Kotti testnet
 
-WrappedETCToken contract address:
+WETC contract address:
 
 ```
 0xE6CaF54ae3bA08E7aa07ae199Af09bA6fd239F98
