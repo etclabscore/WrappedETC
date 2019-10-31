@@ -1,4 +1,4 @@
-const Simple777Token = artifacts.require('Simple777Token');
+const WrappedETCToken = artifacts.require('WrappedETCToken');
 
 require('@openzeppelin/test-helpers/configure')({ provider: web3.currentProvider, environment: 'truffle' });
 
@@ -10,5 +10,5 @@ module.exports = async function (deployer, network, accounts) {
     await singletons.ERC1820Registry(accounts[0]);
   }
 
-  await deployer.deploy(Simple777Token);
+  await deployer.deploy(WrappedETCToken);
 };
