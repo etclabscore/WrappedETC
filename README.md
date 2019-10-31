@@ -5,7 +5,7 @@
 WrappedETCToken contract address:
 
 ```
-0xDCE7E08845820EBAc5A0d74a1a49DF727aD9f09D
+0xAea8081026deB8d8E604Fb5b0A1E2A3f70981106
 ```
 
 ## Getting Started

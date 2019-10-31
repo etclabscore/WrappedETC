@@ -20,7 +20,7 @@ contract WrappedETCToken is ERC777 {
     }
 
     function withdraw(uint wad) public {
-        this.burn(wad, "");
+        super._burn(msg.sender, msg.sender, wad, "", "");
         msg.sender.transfer(wad);
         emit Withdrawal(msg.sender, wad);
     }
