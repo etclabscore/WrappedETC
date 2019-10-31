@@ -12,8 +12,9 @@ module.exports = {
     },
 
     kotti: {
-      provider: () => new HDWalletProvider(mnemonic, `https://www.ethercluster.com/kotti`),
-      network_id: "*",
+      provider: () => new HDWalletProvider(mnemonic, "https://www.ethercluster.com/kotti"),
+      network_id: 6,
+      gasPrice: 2000000000,
       confirmations: 2,
       timeoutBlocks: 200,
       skipDryRun: true
