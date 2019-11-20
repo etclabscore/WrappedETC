@@ -1,24 +1,20 @@
 import React, { Component } from "react";
 import Web3 from "web3";
 import TruffleContract from "truffle-contract";
-import Tokens from "./Tokens/all";
-import Nav from "./Components/Nav";
-import Description from "./Components/Description";
-import Container from "./Components/Container";
-import InstallMetamask from "./Components/InstallMetamask";
-import UnlockMetamask from "./Components/UnlockMetamask";
-import TokenZendR from "./contracts/WrappedETCToken.json";
+import Nav from "./components/Nav";
+import Description from "./components/Description";
+import Container from "./components/Container";
+import InstallMetamask from "./components/InstallMetamask";
+import UnlockMetamask from "./components/UnlockMetamask";
+import WrappedETCToken from "./contracts/WrappedETCToken.json";
 
 class App extends Component {
   constructor() {
     super();
 
-    this.tokens = Tokens;
     this.appName = "WETC Portal";
     this.isWeb3 = true; //If metamask is installed
     this.isWeb3Locked = false; //If metamask account is locked
-    this.newTransfer = this.newTransfer.bind(this);
-    this.closeTransfer = this.closeTransfer.bind(this);
     this.onInputChangeUpdateField = this.onInputChangeUpdateField.bind(this);
 
     this.state = {
@@ -27,7 +23,6 @@ class App extends Component {
       tx: null,
       network: "Checking...",
       account: null,
-      tokens: [],
       transferDetail: {},
       fields: {
         receiver: null,
@@ -45,8 +40,8 @@ class App extends Component {
       this.web3Provider = web3.currentProvider;
       this.web3 = new Web3(web3.currentProvider);
 
-      this.tokenZendr = TruffleContract(TokenZendR);
-      this.tokenZendr.setProvider(this.web3Provider);
+      this.WrappedETCToken = TruffleContract(WrappedETCToken);
+      this.WrappedETCToken.setProvider(this.web3Provider);
 
       web3.eth.getCoinbase((err, coinbase) => {
         if (coinbase === null) this.isWeb3Locked = true;
@@ -90,19 +85,6 @@ class App extends Component {
     });
   };
 
-  newTransfer = index => {
-    this.setState({
-      transferDetail: this.state.tokens[index]
-    });
-  };
-
-  closeTransfer = () => {
-    this.setState({
-      transferDetail: {},
-      fields: {}
-    });
-  };
-
   setGasPrice = () => {
     this.web3.eth.getGasPrice((err, price) => {
       price = this.web3.fromWei(price, "gwei");
@@ -111,7 +93,7 @@ class App extends Component {
   };
 
   setContractAddress = () => {
-    this.tokenZendr.deployed().then(instance => {
+    this.WrappedETCToken.deployed().then(instance => {
       this.setState({ tzAddress: instance.address });
     });
   };
@@ -129,80 +111,22 @@ class App extends Component {
     });
   };
 
-  Transfer = () => {
-    this.setState({
-      inProgress: true
-    });
-
-    let contract = this.web3.eth
-      .contract(this.state.transferDetail.abi)
-      .at(this.state.transferDetail.address);
-    let transObj = {
-      from: this.state.account,
-      gas: this.state.defaultGasLimit,
-      gasPrice: this.state.defaultGasPrice
-    };
-    let app = this;
-    let amount =
-      this.state.fields.amount + "e" + this.state.transferDetail.decimal;
-    let symbol = this.state.transferDetail.symbol;
-    let receiver = this.state.fields.receiver;
-
-    amount = new this.web3.BigNumber(amount).toNumber();
-
-    contract.approve(
-      this.state.tzAddress,
-      amount,
-      transObj,
-      (err, response) => {
-        if (!err) {
-          app.tokenZendr.deployed().then(instance => {
-            this.tokenZendrInstance = instance;
-            this.watchEvents();
-
-            this.tokenZendrInstance
-              .transferTokens(symbol, receiver, amount, transObj)
-              .then((response, err) => {
-                if (response) {
-                  console.log(response);
-
-                  app.resetApp();
-
-                  app.setState({
-                    tx: response.tx,
-                    inProgress: false
-                  });
-                } else {
-                  console.log(err);
-                }
-              });
-          });
-        } else {
-          console.log(err);
-        }
-      }
-    );
-  };
-
   Wrap = () => {
     this.setState({
       inProgress: true
     });
 
-    let app = this;
     let amount = this.state.fields.amount + "e18";
-
     amount = new this.web3.BigNumber(amount).toNumber();
-    app.tokenZendr.deployed().then(instance => {
-      this.tokenZendrInstance = instance;
+    this.WrappedETCToken.deployed().then(instance => {
       this.watchEvents();
-      this.tokenZendrInstance
+      instance
         .deposit({ value: amount, from: this.state.account })
         .then((response, err) => {
           if (response) {
-            app.resetApp();
+            this.resetApp();
 
-            app.setState({
+            this.setState({
               tx: response.tx,
               inProgress: false
             });
@@ -219,20 +143,18 @@ class App extends Component {
       inProgress: true
     });
 
-    let app = this;
     let amount = this.state.fields.amount + "e18";
 
     amount = new this.web3.BigNumber(amount).toNumber();
-    app.tokenZendr.deployed().then(instance => {
-      this.tokenZendrInstance = instance;
+    this.WrappedETCToken.deployed().then(instance => {
       this.watchEvents();
-      this.tokenZendrInstance
+      instance
         .withdraw(amount, { from: this.state.account })
         .then((response, err) => {
           if (response) {
-            app.resetApp();
+            this.resetApp();
 
-            app.setState({
+            this.setState({
               tx: response.tx,
               inProgress: false
             });
@@ -247,21 +169,7 @@ class App extends Component {
   /**
    * @dev Just a console log to list all transfers
    */
-  watchEvents() {
-    // let param = {
-    //   from: this.state.account,
-    //   to: this.state.fields.receiver,
-    //   amount: this.state.fields.amount
-    // };
-    // this.tokenZendrInstance
-    //   .TransferSuccessful(param, {
-    //     fromBlock: 0,
-    //     toBlock: "latest"
-    //   })
-    //   .watch((error, event) => {
-    //     console.log(event);
-    //   });
-  }
+  watchEvents() {}
 
   onInputChangeUpdateField = (name, value) => {
     let fields = this.state.fields;
@@ -276,15 +184,15 @@ class App extends Component {
   updateBalance = () => {
     this.web3.eth.getCoinbase((err, account) => {
       this.setState({ account });
+      console.log(account)
       this.web3.eth.getBalance(account, (err, response) => {
         this.setState({
           etcBalance: this.web3.fromWei(response, "ether").toString()
         });
       });
 
-      this.tokenZendr.deployed().then(instance => {
-        this.tokenZendrInstance = instance;
-        this.tokenZendrInstance.balanceOf(account).then(response => {
+      this.WrappedETCToken.deployed().then(instance => {
+        instance.balanceOf(account).then(response => {
           this.setState({
             wetcBalance: this.web3.fromWei(response, "ether").toString()
           });
@@ -317,9 +225,6 @@ class App extends Component {
             <Container
               onInputChangeUpdateField={this.onInputChangeUpdateField}
               transferDetail={this.state.transferDetail}
-              closeTransfer={this.closeTransfer}
-              newTransfer={this.newTransfer}
-              Transfer={this.Transfer}
               Wrap={this.Wrap}
               Unwrap={this.Unwrap}
               account={this.state.account}
@@ -330,7 +235,6 @@ class App extends Component {
               tx={this.state.tx}
               inProgress={this.state.inProgress}
               fields={this.state.fields}
-              tokens={this.state.tokens}
             />
           </div>
         );

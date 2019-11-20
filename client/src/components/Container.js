@@ -65,32 +65,6 @@ class Container extends Component {
                   </div>
                 </div>
               </div>
-              {/* {this.props.transferDetail.hasOwnProperty("name") ? (
-                <div>
-                  <TransferHeader token={this.props.transferDetail} />
-                  <TransferToken
-                    closeTransfer={this.props.closeTransfer}
-                    transferDetail={this.props.transferDetail}
-                    fields={this.props.fields}
-                    account={this.props.account}
-                    Transfer={this.props.Transfer}
-                    inProgress={this.props.inProgress}
-                    defaultGasPrice={this.props.defaultGasPrice}
-                    defaultGasLimit={this.props.defaultGasLimit}
-                    onInputChangeUpdateField={
-                      this.props.onInputChangeUpdateField
-                    }
-                  />
-                </div>
-              ) : (
-                <div className={this.props.tx ? "is-hidden" : ""}>
-                  <SortTokenBlock />
-                  <TokenBlock
-                    newTransfer={this.props.newTransfer}
-                    tokens={this.props.tokens}
-                  />
-                </div>
-              )} */}
               <TradeMarkBlock tx={this.props.tx} />
             </div>
           </div>
