@@ -1,0 +1,20 @@
+img.meta-trademark {
+    width: 20%;
+}
+
+.sortby {
+    font-weight: 300;
+    cursor: pointer;
+}
+
+.download-metamask {
+    height: 30%;
+    cursor: pointer;
+    width: 70%;
+    margin: auto;
+}
+
+.is-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
