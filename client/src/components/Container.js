@@ -5,10 +5,6 @@ import SuccessTransaction from "./SuccessTransaction";
 import InputField from "./InputField";
 
 class Container extends Component {
-  // constructor(props){
-  //     super(props)
-  // }
-
   render() {
     return (
       <section className="container">
@@ -17,18 +13,11 @@ class Container extends Component {
             <div className="panel">
               {this.props.tx ? <SuccessTransaction tx={this.props.tx} /> : ""}
 
-              <AddressBar
-                account={this.props.account}
-                etcBalance={this.props.etcBalance}
-                wetcBalance={this.props.wetcBalance}
-              />
-
+              <AddressBar account={this.props.account} />
               <div className="panel-block is-paddingless is-12">
                 <div className="column is-12" id="token-lists">
                   <InputField
-                    onInputChangeUpdateField={
-                      this.props.onInputChangeUpdateField
-                    }
+                    onUpdateField={this.props.onUpdateField}
                     fields={this.props.fields}
                     name="amount"
                     placeholder="Amount"
@@ -44,7 +33,7 @@ class Container extends Component {
                             : "button is-primary"
                         }
                         disabled={this.props.inProgress}
-                        onClick={() => this.props.Wrap()}
+                        onClick={this.props.handleWrap}
                       >
                         Wrap
                       </a>
@@ -57,7 +46,7 @@ class Container extends Component {
                             : "button is-danger"
                         }
                         disabled={this.props.inProgress}
-                        onClick={() => this.props.Unwrap()}
+                        onClick={this.props.handleUnwrap}
                       >
                         Unwrap
                       </a>

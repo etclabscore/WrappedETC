@@ -13,208 +13,132 @@ class App extends Component {
     super();
 
     this.appName = "WETC Portal";
-    this.isWeb3 = true; //If metamask is installed
-    this.isWeb3Locked = false; //If metamask account is locked
-    this.onInputChangeUpdateField = this.onInputChangeUpdateField.bind(this);
-
     this.state = {
-      tzAddress: null,
+      isWeb3: true,
+      isWeb3Locked: false,
       inProgress: false,
       tx: null,
       network: "Checking...",
-      account: null,
-      transferDetail: {},
+      account: { address: null },
       fields: {
         receiver: null,
-        amount: null,
-        gasPrice: null,
-        gasLimit: null
-      },
-      defaultGasPrice: null,
-      defaultGasLimit: 200000
+        amount: null
+      }
     };
 
-    let web3 = window.web3;
-    if (typeof web3 !== "undefined") {
-      // Use Mist/MetaMask's provider
-      this.web3Provider = web3.currentProvider;
-      this.web3 = new Web3(web3.currentProvider);
-
-      this.WrappedETCToken = TruffleContract(WrappedETCToken);
-      this.WrappedETCToken.setProvider(this.web3Provider);
-
-      web3.eth.getCoinbase((err, coinbase) => {
-        if (coinbase === null) this.isWeb3Locked = true;
-      });
-    } else {
-      this.isWeb3 = false;
-    }
+    this.handleWrap = this.handleWrap.bind(this);
+    this.handleUnwrap = this.handleUnwrap.bind(this);
   }
 
-  setNetwork = () => {
-    let networkName,
-      that = this;
+  componentDidMount = async () => {
+    let web3 = window.web3;
+    if (typeof web3 !== "undefined") {
+      this.web3 = new Web3(web3.currentProvider);
+    } else {
+      this.setState({ isWeb3: false });
+      return;
+    }
+    await this.setNetwork();
+    await this.updateBalance();
+  };
 
-    this.web3.version.getNetwork(function(err, networkId) {
-      switch (networkId) {
-        case "1":
-          networkName = "Main";
-          break;
-        case "2":
-          networkName = "Morden";
-          break;
-        case "3":
-          networkName = "Ropsten";
-          break;
-        case "4":
-          networkName = "Rinkeby";
-          break;
-        case "6":
-          networkName = "Kotti";
-          break;
-        case "42":
-          networkName = "Kovan";
-          break;
-        default:
-          networkName = networkId;
+  setNetwork = async () => {
+    const networkId = await this.web3.eth.net.getId();
+    let network;
+    switch (networkId) {
+      case 6:
+        network = "Kotti";
+        break;
+      default:
+        this.setState({ network: "Unavailable", isWeb3Locked: true });
+        return;
+    }
+    const instance = TruffleContract(WrappedETCToken);
+    instance.setProvider(this.web3.currentProvider);
+    this.WrappedETCToken = await instance.deployed();
+    this.setState({ network });
+  };
+
+  updateBalance = async () => {
+    let account = await this.web3.eth.getCoinbase();
+    if (!account || this.isWeb3Locked) {
+      this.setState({ isWeb3Locked: true });
+      return;
+    }
+
+    let etcBalance = await this.web3.eth.getBalance(account);
+    if (!this.WrappedETCToken) return;
+    let wetcBalance = await this.WrappedETCToken.balanceOf(account);
+    this.setState({
+      account: {
+        address: account,
+        etcBalance: this.web3.utils.fromWei(etcBalance, "ether").toString(),
+        wetcBalance: this.web3.utils
+          .fromWei(wetcBalance.toString(), "ether")
+          .toString()
       }
-
-      that.setState({
-        network: networkName
-      });
     });
   };
 
-  setGasPrice = () => {
-    this.web3.eth.getGasPrice((err, price) => {
-      price = this.web3.fromWei(price, "gwei");
-      if (!err) this.setState({ defaultGasPrice: price.toNumber() });
-    });
-  };
-
-  setContractAddress = () => {
-    this.WrappedETCToken.deployed().then(instance => {
-      this.setState({ tzAddress: instance.address });
-    });
+  onUpdateField = (name, value) => {
+    let fields = this.state.fields;
+    fields[name] = value;
+    this.setState({ fields });
   };
 
   resetApp = () => {
     this.setState({
-      transferDetail: {},
       fields: {
         receiver: null,
-        amount: null,
-        gasPrice: null,
-        gasLimit: null
-      },
-      defaultGasPrice: null
+        amount: null
+      }
     });
   };
 
-  Wrap = () => {
-    this.setState({
-      inProgress: true
-    });
-
-    let amount = this.state.fields.amount + "e18";
-    amount = new this.web3.BigNumber(amount).toNumber();
-    this.WrappedETCToken.deployed().then(instance => {
-      this.watchEvents();
-      instance
-        .deposit({ value: amount, from: this.state.account })
-        .then((response, err) => {
-          if (response) {
-            this.resetApp();
-
-            this.setState({
-              tx: response.tx,
-              inProgress: false
-            });
-            this.updateBalance();
-          } else {
-            console.log(err);
-          }
-        });
-    });
-  };
-
-  Unwrap = () => {
-    this.setState({
-      inProgress: true
-    });
-
-    let amount = this.state.fields.amount + "e18";
-
-    amount = new this.web3.BigNumber(amount).toNumber();
-    this.WrappedETCToken.deployed().then(instance => {
-      this.watchEvents();
-      instance
-        .withdraw(amount, { from: this.state.account })
-        .then((response, err) => {
-          if (response) {
-            this.resetApp();
-
-            this.setState({
-              tx: response.tx,
-              inProgress: false
-            });
-            this.updateBalance();
-          } else {
-            console.log(err);
-          }
-        });
-    });
-  };
-
-  /**
-   * @dev Just a console log to list all transfers
-   */
-  watchEvents() {}
-
-  onInputChangeUpdateField = (name, value) => {
-    let fields = this.state.fields;
-
-    fields[name] = value;
-
-    this.setState({
-      fields
-    });
-  };
-
-  updateBalance = () => {
-    this.web3.eth.getCoinbase((err, account) => {
-      this.setState({ account });
-      console.log(account)
-      this.web3.eth.getBalance(account, (err, response) => {
-        this.setState({
-          etcBalance: this.web3.fromWei(response, "ether").toString()
-        });
+  async handleWrap() {
+    this.setState({ inProgress: true });
+    let amount = this.web3.utils.toWei(this.state.fields.amount, "ether");
+    try {
+      let response = await this.WrappedETCToken.deposit({
+        value: amount,
+        from: this.state.account.address
       });
+      this.resetApp();
+      this.setState({ tx: response.tx, inProgress: false });
+      this.updateBalance();
+    } catch (err) {
+      console.log(err);
+    }
+  }
 
-      this.WrappedETCToken.deployed().then(instance => {
-        instance.balanceOf(account).then(response => {
-          this.setState({
-            wetcBalance: this.web3.fromWei(response, "ether").toString()
-          });
-        });
+  async handleUnwrap() {
+    this.setState({ inProgress: true });
+    let amount = this.web3.utils.toWei(this.state.fields.amount, "ether");
+    try {
+      let response = await this.WrappedETCToken.withdraw(amount, {
+        from: this.state.account.address
       });
-    });
-  };
-
-  componentDidMount() {
-    this.setNetwork();
-    this.setGasPrice();
-    this.setContractAddress();
-    this.updateBalance();
+      this.resetApp();
+      this.setState({ tx: response.tx, inProgress: false });
+      this.updateBalance();
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   render() {
-    if (this.isWeb3) {
-      if (this.isWeb3Locked) {
+    if (this.state.isWeb3) {
+      if (this.state.isWeb3Locked) {
         return (
           <div>
             <Nav appName={this.appName} network={this.state.network} />
-            <UnlockMetamask message="Unlock Your Metamask/Mist Wallet" />
+            <UnlockMetamask
+              message={
+                this.state.network === "Unavailable"
+                  ? "Wetc not available on current network"
+                  : "Unlock Your Metamask/Mist Wallet"
+              }
+            />
           </div>
         );
       } else {
@@ -223,15 +147,10 @@ class App extends Component {
             <Nav appName={this.appName} network={this.state.network} />
             <Description />
             <Container
-              onInputChangeUpdateField={this.onInputChangeUpdateField}
-              transferDetail={this.state.transferDetail}
-              Wrap={this.Wrap}
-              Unwrap={this.Unwrap}
+              onUpdateField={this.onUpdateField}
+              handleWrap={this.handleWrap}
+              handleUnwrap={this.handleUnwrap}
               account={this.state.account}
-              wetcBalance={this.state.wetcBalance}
-              etcBalance={this.state.etcBalance}
-              defaultGasPrice={this.state.defaultGasPrice}
-              defaultGasLimit={this.state.defaultGasLimit}
               tx={this.state.tx}
               inProgress={this.state.inProgress}
               fields={this.state.fields}
