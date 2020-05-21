@@ -34,6 +34,7 @@ class App extends Component {
     let web3 = window.web3;
     if (typeof web3 !== "undefined") {
       this.web3 = new Web3(web3.currentProvider);
+      await window.ethereum.enable();
     } else {
       this.setState({ isWeb3: false });
       return;
@@ -50,13 +51,14 @@ class App extends Component {
         network = "Kotti";
         break;
       default:
-        this.setState({ network: "Unavailable", isWeb3Locked: true });
-        return;
+        network = "Local";
+        break;
     }
     const instance = TruffleContract(WrappedETCToken);
     instance.setProvider(this.web3.currentProvider);
     this.WrappedETCToken = await instance.deployed();
     this.setState({ network });
+    debugger
   };
 
   updateBalance = async () => {
@@ -96,8 +98,11 @@ class App extends Component {
   };
 
   async handleWrap() {
+    if (!this.state.fields.amount) {
+      return;
+    }
     this.setState({ inProgress: true });
-    let amount = this.web3.utils.toWei(this.state.fields.amount, "ether");
+    let amount = this.web3.utils.toWei(this.state.fields.amount.toString(), "ether");
     try {
       let response = await this.WrappedETCToken.deposit({
         value: amount,
@@ -112,8 +117,11 @@ class App extends Component {
   }
 
   async handleUnwrap() {
+    if (!this.state.fields.amount) {
+      return;
+    }
     this.setState({ inProgress: true });
-    let amount = this.web3.utils.toWei(this.state.fields.amount, "ether");
+    let amount = this.web3.utils.toWei(this.state.fields.amount.toString(), "ether");
     try {
       let response = await this.WrappedETCToken.withdraw(amount, {
         from: this.state.account.address

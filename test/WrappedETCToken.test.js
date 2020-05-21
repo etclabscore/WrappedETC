@@ -48,4 +48,26 @@ contract('WrappedETCToken', function ([_, registryFunder, creator, operator]) {
       _value: value,
     });
   });
+
+  // it('can provide a flash loan', async function () {
+  //   const value = new BN(1);
+  //   let flash;
+  //   try {
+  //     flash = await this.token.flash(1, { from: creator });
+  //     console.log("flash loan executed");
+  //   } catch (e) {
+  //     console.log("error during flash loan:", e);
+  //   }
+
+  //   const totalSupply = await this.token.totalSupply();
+  //   const creatorBalance = await this.token.balanceOf(creator);
+
+  //   totalSupply.should.be.bignumber.equal(new BN("0"));
+  //   creatorBalance.should.be.bignumber.equal(new BN("0"));
+
+  //   await expectEvent(flash, 'FlashLoan', {
+  //     _owner: creator,
+  //     _value: value,
+  //   });
+  // });
 });
