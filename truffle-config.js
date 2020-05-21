@@ -1,4 +1,6 @@
+
 require('chai/register-should');
+
 const path = require("path");
 const PrivateKeyProvider = require('truffle-privatekey-provider');
 const fs = require('fs');
@@ -55,7 +57,7 @@ module.exports = {
       version: "0.5.5",
       settings: {
        optimizer: {
-         enabled: false,
+         enabled: true,
          runs: 200
        } // ,
        // evmVersion: "byzantium"
