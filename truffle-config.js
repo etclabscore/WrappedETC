@@ -34,6 +34,7 @@ module.exports = {
     },
 
     development: {
+      provider: () => provider,
       host: "127.0.0.1",
       gas: 6283185,
       port: 7545,
